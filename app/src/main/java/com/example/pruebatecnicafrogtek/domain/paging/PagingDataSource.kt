@@ -1,11 +1,12 @@
-package com.example.pruebatecnicafrogtek.datasource.paging
+package com.example.pruebatecnicafrogtek.domain.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.example.pruebatecnicafrogtek.domain.models.BeersDomain
-import com.example.pruebatecnicafrogtek.domain.usecases.PagingUseCase
+import com.example.pruebatecnicafrogtek.domain.repositories.ApiTask
+import javax.inject.Inject
 
-class PagingDataSource(val useCase: PagingUseCase) :
+class PagingDataSource @Inject constructor(private val apiTask: ApiTask) :
     PagingSource<Int, BeersDomain>() {
     override fun getRefreshKey(state: PagingState<Int, BeersDomain>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
@@ -17,8 +18,8 @@ class PagingDataSource(val useCase: PagingUseCase) :
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, BeersDomain> {
         return try {
             val nextPageNumber = params.key ?: 1
-            val response = useCase(nextPageNumber)
-            val data = response.data ?: emptyList()
+            val response = apiTask.fetchData(nextPageNumber)
+            val data = response
 
             LoadResult.Page(
                 data = data,

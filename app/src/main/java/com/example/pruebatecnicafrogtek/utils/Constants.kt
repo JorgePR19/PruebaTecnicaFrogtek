@@ -7,6 +7,8 @@ object Constants {
     const val BASE_URL = "https://punkapi.online/v3/"
     const val BEERS_ENDPOINT = "beers"
     const val IMAGE_ENDPOINT = "https://punkapi.online/v3/images/"
+    const val ERROR_APPEND = "Algo salió mal al cargar más información. Vuelve a intentarlo más tarde."
+    const val ERROR_END_LIST = "No hay más contenido para mostrar."
 
     fun String.formatDate(): String {
         val inputFormat = SimpleDateFormat("MM/yyyy", Locale.getDefault())

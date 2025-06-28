@@ -9,110 +9,68 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.pruebatecnicafrogtek.R
 import com.example.pruebatecnicafrogtek.ui.views.MainViewModel
+import com.example.pruebatecnicafrogtek.ui.views.UiState
 import com.example.pruebatecnicafrogtek.ui.views.composables.components.ItemView
 import com.example.pruebatecnicafrogtek.ui.views.composables.components.Skeleton
+import com.example.pruebatecnicafrogtek.utils.Constants
 
 
 @Composable
-fun HomeScreenComposeView(mainViewModel: MainViewModel, modifier: Modifier) {
+fun HomeScreenComposeView(mainViewModel: MainViewModel, modifier: Modifier = Modifier) {
     val lazyListState = rememberLazyGridState()
     val lazyPagingItems = mainViewModel.beersPaging.collectAsLazyPagingItems()
+    val state = mainViewModel.stateUiObserver
+
+
+    LaunchedEffect(lazyPagingItems.loadState) {
+        val refreshState = lazyPagingItems.loadState.refresh
+        val appendState = lazyPagingItems.loadState.append
+
+        when {
+            appendState is LoadState.Loading && lazyPagingItems.itemCount > 29 -> {
+                mainViewModel.updateUiState(UiState.LoadingData(repeat = 2))
+            }
+
+            refreshState is LoadState.Error || appendState is LoadState.Error -> {
+                mainViewModel.updateUiState(UiState.ShowMessage(Constants.ERROR_APPEND))
+            }
+
+            appendState.endOfPaginationReached -> {
+                    mainViewModel.updateUiState(UiState.ShowMessage(Constants.ERROR_END_LIST))
+            }
+        }
+    }
 
     LazyVerticalGrid(
         modifier = modifier,
         state = lazyListState,
         columns = GridCells.Fixed(2),
     ) {
-        when {
-            lazyPagingItems.loadState.isIdle || lazyPagingItems.loadState.append is LoadState.Loading -> {
-                if (lazyPagingItems.itemCount > 0) {
-                    items(lazyPagingItems.itemCount) {
-                        val itemsPag = lazyPagingItems[it]
-                        if (itemsPag != null) {
-                            ItemView(itemsPag)
-                        }
-                    }
-
-                    when (val appendState = lazyPagingItems.loadState.append) {
-                        is LoadState.Error -> {
-                            item {
-                                Text(
-                                    stringResource(R.string.error_append),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        }
-
-                        LoadState.Loading -> {
-                            if (lazyPagingItems.itemCount > 30) {
-                                items(2) {
-                                    Skeleton()
-                                }
-                            }
-                        }
-
-                        is LoadState.NotLoading -> {
-                            if (appendState.endOfPaginationReached) {
-                                item(span = { GridItemSpan(maxLineSpan) })  {
-                                    Box(
-                                        Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.end_list),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            textAlign = TextAlign.Center,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    item(span = { GridItemSpan(maxLineSpan) })  {
-                        Box(
-                            Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.TopCenter
-                        ) {
-                            Text(
-                                text = stringResource(R.string.empty_list),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
+        items(lazyPagingItems.itemCount) { index ->
+            val item = lazyPagingItems[index]
+            if (item != null) {
+                ItemView(item)
             }
+        }
 
-            lazyPagingItems.loadState.refresh is LoadState.Loading -> {
-                items(10) {
-                    Skeleton()
-                }
-            }
-
-            lazyPagingItems.loadState.refresh is LoadState.Error -> {
-                val errorMessage =
-                    (lazyPagingItems.loadState.refresh as LoadState.Error).error.localizedMessage
-
+        when (state) {
+            is UiState.ShowMessage -> {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(
                         Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.TopCenter
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = errorMessage ?: stringResource(R.string.error_append),
+                            text = state.message,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.SemiBold
@@ -121,11 +79,9 @@ fun HomeScreenComposeView(mainViewModel: MainViewModel, modifier: Modifier) {
                 }
             }
 
-            else -> {
-                if (lazyPagingItems.itemCount > 29) {
-                    items(2) {
-                        Skeleton()
-                    }
+            is UiState.LoadingData -> {
+                items(state.repeat) {
+                    Skeleton()
                 }
             }
         }
