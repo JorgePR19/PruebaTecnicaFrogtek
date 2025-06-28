@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.example.pruebatecnicafrogtek.domain.models.BeersDomain
@@ -35,7 +34,7 @@ fun ItemView(beersDomain: BeersDomain) {
             .width(Dp150)
             .padding(vertical = Dp8, horizontal = Dp4)
     ) {
-        ConstraintLayout(modifier = Modifier.fillMaxSize().padding(4.dp)) {
+        ConstraintLayout(modifier = Modifier.fillMaxSize().padding(Dp4)) {
             val (image, name, tagline, date, ibu, description) = createRefs()
 
             Text(

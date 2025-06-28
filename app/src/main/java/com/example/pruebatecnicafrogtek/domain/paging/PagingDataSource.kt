@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.example.pruebatecnicafrogtek.domain.models.BeersDomain
 import com.example.pruebatecnicafrogtek.domain.repositories.ApiTask
+import com.example.pruebatecnicafrogtek.utils.Constants
 import javax.inject.Inject
 
 class PagingDataSource @Inject constructor(private val apiTask: ApiTask) :
@@ -21,16 +22,17 @@ class PagingDataSource @Inject constructor(private val apiTask: ApiTask) :
             val response = apiTask.fetchData(nextPageNumber)
             val data = response
 
-            LoadResult.Page(
-                data = data,
-                prevKey = null,
-                nextKey = if (data.isNotEmpty()) nextPageNumber + 1 else null
-            )
+            if (response.isNotEmpty())
+                LoadResult.Page(
+                    data = data,
+                    prevKey = null,
+                    nextKey = if (data.isNotEmpty()) nextPageNumber + 1 else null
+                )
+            else
+                LoadResult.Error(Exception(Constants.ERROR_APPEND))
 
         } catch (e: Exception) {
-            LoadResult.Error(
-                Exception("Error desconocido: ${e.localizedMessage}")
-            )
+            LoadResult.Error(Exception("Error desconocido: ${e.localizedMessage}"))
         }
     }
 }
